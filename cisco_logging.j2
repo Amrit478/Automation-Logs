@@ -1,0 +1,49 @@
+! ==========================================
+! Global Syslog Configuration -> Alloy
+! ==========================================
+logging host {{ collector_ip }} transport udp port {{ syslog_port }}
+logging trap debugging
+logging facility local7
+logging source-interface {{ device.source_interface }}
+logging origin-id hostname
+logging on
+
+! ==========================================
+! Flexible NetFlow Configuration -> GoFlow2
+! ==========================================
+flow record FNF_RECORD
+ match ipv4 source address
+ match ipv4 destination address
+ match ipv4 protocol
+ match transport source-port
+ match transport destination-port
+ collect counter bytes long
+ collect counter packets long
+ collect timestamp sys-uptime first
+ collect timestamp sys-uptime last
+!
+flow exporter FNF_EXPORTER
+ destination {{ collector_ip }}
+ transport udp {{ netflow_export_port }}
+ source {{ device.source_interface }}
+ export-protocol netflow-v9
+ template data timeout 60
+!
+flow monitor FNF_MONITOR
+ record FNF_RECORD
+ exporter FNF_EXPORTER
+ cache timeout active 60
+ cache timeout inactive 15
+!
+
+! ==========================================
+! Interface Application
+! ==========================================
+{% for intf in device.netflow_interfaces %}
+interface {{ intf }}
+{% if 'SW' in device.hostname %}
+ no switchport
+{% endif %}
+ ip flow monitor FNF_MONITOR input
+ ip flow monitor FNF_MONITOR output
+{% endfor %}

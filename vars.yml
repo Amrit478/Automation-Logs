@@ -1,0 +1,36 @@
+---
+collector_ip: "10.10.0.100"      # IP of Linux Server running Docker (Alloy/GoFlow2)
+netflow_export_port: 2055        # GoFlow2 UDP port
+syslog_port: 1514                # Grafana Alloy UDP syslog port
+
+ssh_credentials:
+  username: "admin"
+  password: "cisco_password"
+  secret: "enable_password"
+
+devices:
+  # --- 1x IOL L3 Router ---
+  - hostname: "IOL-R1"
+    ip: "10.10.0.1"
+    device_type: "cisco_ios"
+    source_interface: "Ethernet0/0"
+    netflow_interfaces:
+      - "Ethernet0/0"
+      - "Ethernet0/1"
+
+  # --- 2x IOL L2 Switches ---
+  - hostname: "IOL-SW1"
+    ip: "10.10.0.2"
+    device_type: "cisco_ios"
+    source_interface: "Vlan10"     # SVI for Management
+    netflow_interfaces:
+      - "Ethernet0/1"             # Uplink to R1
+      - "Ethernet0/2"             # Connection to VPC1
+
+  - hostname: "IOL-SW2"
+    ip: "10.10.0.3"
+    device_type: "cisco_ios"
+    source_interface: "Vlan10"     # SVI for Management
+    netflow_interfaces:
+      - "Ethernet0/1"             # Uplink to R1
+      - "Ethernet0/2"             # Connection to VPC2
